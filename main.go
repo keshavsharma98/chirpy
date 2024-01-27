@@ -29,9 +29,20 @@ func main() {
 	fsHandler := apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot))))
 	r.Handle("/app", fsHandler)
 	r.Handle("/app/*", fsHandler)
-	r.Get("/healthz", handlerReadiness)
-	r.Get("/metrics", apiCfg.handlerMetrics)
-	r.Get("/reset", apiCfg.handlerReset)
+
+	// Create a new router for /api namespace
+	apiRouter := chi.NewRouter()
+
+	// Move non-website endpoints to /api namespace
+	apiRouter.Get("/healthz", handlerReadiness)
+	apiRouter.Get("/reset", apiCfg.handlerReset)
+	apiRouter.Post("/validate_chirp", validateChirp)
+	// Mount the apiRouter under /api path in the main router
+	r.Mount("/api", apiRouter)
+
+	adminRouter := chi.NewRouter()
+	adminRouter.Get("/metrics", apiCfg.handlerMetrics)
+	r.Mount("/admin", adminRouter)
 
 	corsMux := middlewareCors(r)
 
