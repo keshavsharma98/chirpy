@@ -5,18 +5,26 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/keshavsharma98/chirpy/internal/database"
 )
 
 type apiConfig struct {
 	fileserverHits int
+	DB             *database.DB
 }
 
 func main() {
 	const filepathRoot = "."
 	const port = "8080"
 
+	db, err := database.NewDB("database.json")
+	if err != nil {
+		log.Fatalln("Error in setting up DB", err)
+	}
+
 	apiCfg := apiConfig{
 		fileserverHits: 0,
+		DB:             db,
 	}
 
 	// mux := http.NewServeMux()
@@ -36,7 +44,11 @@ func main() {
 	// Move non-website endpoints to /api namespace
 	apiRouter.Get("/healthz", handlerReadiness)
 	apiRouter.Get("/reset", apiCfg.handlerReset)
-	apiRouter.Post("/validate_chirp", validateChirp)
+	apiRouter.Post("/chirps", apiCfg.handlerCreateChirps)
+	apiRouter.Get("/chirps", apiCfg.handlerGetAllChirps)
+	apiRouter.Get("/chirps/{id}", apiCfg.handlerGetChirpById)
+	apiRouter.Post("/users", apiCfg.handlerCreateUsers)
+	apiRouter.Post("/login", apiCfg.handlerLogin)
 	// Mount the apiRouter under /api path in the main router
 	r.Mount("/api", apiRouter)
 
