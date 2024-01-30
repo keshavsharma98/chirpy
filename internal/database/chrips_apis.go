@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-func (db *DB) CreateChirp(data string) (Chirp, error) {
+func (db *DB) CreateChirp(author_id int, data string) (Chirp, error) {
 	chirpsData, err := db.readFromFile()
 	if err != nil {
 		return Chirp{}, err
@@ -14,8 +14,9 @@ func (db *DB) CreateChirp(data string) (Chirp, error) {
 
 	id := len(chirpsData.Chirps) + 1
 	chirp := Chirp{
-		Id:   id,
-		Body: data,
+		Id:       id,
+		Body:     data,
+		AuthorID: author_id,
 	}
 	chirpsData.Chirps[id] = chirp
 
@@ -56,4 +57,34 @@ func (db *DB) GetChirpById(id int) (Chirp, error) {
 		return Chirp{}, errors.New("chirp does not exist")
 	}
 	return c, nil
+}
+
+func (db *DB) DeleteChirpById(user_id, id int) error {
+	chirpsData, err := db.readFromFile()
+	if err != nil {
+		return err
+	}
+
+	c, ok := chirpsData.Chirps[id]
+	if !ok {
+		return errors.New("notfound")
+	}
+
+	if c.AuthorID != user_id {
+		return errors.New("forbidden")
+	}
+
+	delete(chirpsData.Chirps, id)
+
+	marshData, err := json.Marshal(chirpsData)
+	if err != nil {
+		return err
+	}
+
+	err = db.writeToFile(marshData)
+	if err != nil {
+		log.Println("Error while writing to data")
+		return err
+	}
+	return nil
 }

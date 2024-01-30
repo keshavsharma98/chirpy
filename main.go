@@ -57,6 +57,7 @@ func main() {
 	apiRouter.Put("/users", apiCfg.handlerUpdateUser)
 	apiRouter.Post("/revoke", apiCfg.handlerRevokeToken)
 	apiRouter.Post("/refresh", apiCfg.handlerRefreshToken)
+	apiRouter.Delete("/chirps/{id}", apiCfg.handlerDeleteChirpByID)
 	// Mount the apiRouter under /api path in the main router
 	r.Mount("/api", apiRouter)
 
