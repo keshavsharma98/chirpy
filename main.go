@@ -55,6 +55,8 @@ func main() {
 	apiRouter.Post("/users", apiCfg.handlerCreateUsers)
 	apiRouter.Post("/login", apiCfg.handlerLogin)
 	apiRouter.Put("/users", apiCfg.handlerUpdateUser)
+	apiRouter.Post("/revoke", apiCfg.handlerRevokeToken)
+	apiRouter.Post("/refresh", apiCfg.handlerRefreshToken)
 	// Mount the apiRouter under /api path in the main router
 	r.Mount("/api", apiRouter)
 

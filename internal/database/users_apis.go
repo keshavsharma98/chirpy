@@ -45,10 +45,10 @@ func (db *DB) CreateUsers(email, password string) (UpdateUserResponse, error) {
 	}, nil
 }
 
-func (db *DB) Login(jwt_secret_key, email, password string, expires_in_seconds int) (UserResponse, error) {
+func (db *DB) Login(jwt_secret_key, email, password string) (UserLoginResponse, error) {
 	dbData, err := db.readFromFile()
 	if err != nil {
-		return UserResponse{}, err
+		return UserLoginResponse{}, err
 	}
 
 	user := User{}
@@ -62,23 +62,29 @@ func (db *DB) Login(jwt_secret_key, email, password string, expires_in_seconds i
 		}
 	}
 	if !isExist {
-		return UserResponse{}, errors.New("unauthorized")
+		return UserLoginResponse{}, errors.New("unauthorized")
 	}
 
 	err = common.ComparePassword(user.Password, password)
 	if err != nil {
-		return UserResponse{}, errors.New("unauthorized")
+		return UserLoginResponse{}, errors.New("unauthorized")
 	}
 
-	token, err := common.CreateJWTToken(expires_in_seconds, user.Id, jwt_secret_key)
+	token, err := common.CreateJWTToken(user.Id, "chirpy-access", jwt_secret_key)
 	if err != nil {
-		return UserResponse{}, err
+		return UserLoginResponse{}, err
 	}
 
-	return UserResponse{
-		Id:    user.Id,
-		Email: user.Email,
-		Token: token,
+	refresh_token, err := common.CreateJWTToken(user.Id, "chirpy-refresh", jwt_secret_key)
+	if err != nil {
+		return UserLoginResponse{}, err
+	}
+
+	return UserLoginResponse{
+		Id:           user.Id,
+		Email:        user.Email,
+		Token:        token,
+		RefreshToken: refresh_token,
 	}, nil
 }
 

@@ -49,11 +49,8 @@ func (apiCfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Something went wrong")
 		return
 	}
-	exp_time := 86400
-	if body.ExpiresInSeconds != 0 {
-		exp_time = body.ExpiresInSeconds
-	}
-	payloadBody, err := apiCfg.DB.Login(apiCfg.jwtSecret, body.Email, body.Password, exp_time)
+
+	payloadBody, err := apiCfg.DB.Login(apiCfg.jwtSecret, body.Email, body.Password)
 	if err != nil {
 		if err.Error() == "unauthorized" {
 			respondWithError(w, http.StatusUnauthorized, "unauthorized")

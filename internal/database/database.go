@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 )
 
 type DB struct {
@@ -13,8 +14,9 @@ type DB struct {
 }
 
 type DatabaseSchema struct {
-	Chirps map[int]Chirp `json:"chirps"`
-	Users  map[int]User  `json:"users"`
+	Chirps        map[int]Chirp        `json:"chirps"`
+	Users         map[int]User         `json:"users"`
+	RevokedTokens map[string]time.Time `json:"revoked_tokens"`
 }
 
 type Chirp struct {
@@ -28,15 +30,20 @@ type User struct {
 	Password string `json:"password"`
 }
 
-type UserResponse struct {
-	Email string `json:"email"`
-	Id    int    `json:"id"`
-	Token string `json:"token"`
+type UserLoginResponse struct {
+	Email        string `json:"email"`
+	Id           int    `json:"id"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type UpdateUserResponse struct {
 	Email string `json:"email"`
 	Id    int    `json:"id"`
+}
+
+type RefreshTokenResponse struct {
+	Token string `json:"token"`
 }
 
 func NewDB(path string) (*DB, error) {
@@ -54,8 +61,9 @@ func NewDB(path string) (*DB, error) {
 	log.Println("Cannot find DB. Will create new DB")
 
 	schema := DatabaseSchema{
-		Chirps: map[int]Chirp{},
-		Users:  map[int]User{},
+		Chirps:        map[int]Chirp{},
+		Users:         map[int]User{},
+		RevokedTokens: map[string]time.Time{},
 	}
 	err2 := db.createDB(&schema)
 	if err2 != nil {
