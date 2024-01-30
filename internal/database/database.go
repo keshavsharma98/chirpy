@@ -31,6 +31,12 @@ type User struct {
 type UserResponse struct {
 	Email string `json:"email"`
 	Id    int    `json:"id"`
+	Token string `json:"token"`
+}
+
+type UpdateUserResponse struct {
+	Email string `json:"email"`
+	Id    int    `json:"id"`
 }
 
 func NewDB(path string) (*DB, error) {
