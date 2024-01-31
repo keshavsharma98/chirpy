@@ -56,7 +56,10 @@ func (apiCfg *apiConfig) handlerCreateChirps(w http.ResponseWriter, r *http.Requ
 }
 
 func (apiCfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request) {
-	payloadBody, err := apiCfg.DB.GetAllChirps()
+	order := r.URL.Query().Get("sort")
+	author_id := r.URL.Query().Get("author_id")
+
+	payloadBody, err := apiCfg.DB.GetAllChirps(author_id, order)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Something went wrong")
 	}

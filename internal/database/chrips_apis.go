@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"sort"
+	"strconv"
 )
 
 func (db *DB) CreateChirp(author_id int, data string) (Chirp, error) {
@@ -34,16 +36,41 @@ func (db *DB) CreateChirp(author_id int, data string) (Chirp, error) {
 	return chirp, nil
 }
 
-func (db *DB) GetAllChirps() ([]Chirp, error) {
+func (db *DB) GetAllChirps(author, order string) ([]Chirp, error) {
+
 	chirpsData, err := db.readFromFile()
 	if err != nil {
 		return nil, err
 	}
 
-	chirps := make([]Chirp, len(chirpsData.Chirps))
-	for _, v := range chirpsData.Chirps {
-		chirps[v.Id-1] = v
+	author_id := 0
+	if author != "" {
+		author_id_int, err := strconv.Atoi(author)
+		if err != nil {
+			return []Chirp{}, err
+		}
+		author_id = author_id_int
 	}
+
+	chirps := make([]Chirp, 0, len(chirpsData.Chirps))
+	for _, v := range chirpsData.Chirps {
+		if author != "" {
+			if v.AuthorID == author_id {
+				chirps = append(chirps, v)
+			}
+		} else {
+			chirps = append(chirps, v)
+		}
+	}
+
+	isAsc := order != "desc"
+
+	sort.Slice(chirps, func(i, j int) bool {
+		if isAsc {
+			return chirps[i].Id < chirps[j].Id
+		}
+		return chirps[i].Id > chirps[j].Id
+	})
 	return chirps, nil
 }
 
