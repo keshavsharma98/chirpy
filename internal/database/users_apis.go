@@ -23,9 +23,10 @@ func (db *DB) CreateUsers(email, password string) (UpdateUserResponse, error) {
 	id := len(dbData.Users) + 1
 	hash := common.EncryptPassword(password)
 	user := User{
-		Id:       id,
-		Email:    email,
-		Password: hash,
+		Id:          id,
+		Email:       email,
+		Password:    hash,
+		IsChirpyRed: false,
 	}
 	dbData.Users[id] = user
 
@@ -40,8 +41,9 @@ func (db *DB) CreateUsers(email, password string) (UpdateUserResponse, error) {
 		return UpdateUserResponse{}, err2
 	}
 	return UpdateUserResponse{
-		Email: user.Email,
-		Id:    user.Id,
+		Email:       user.Email,
+		Id:          user.Id,
+		IsChirpyRed: user.IsChirpyRed,
 	}, nil
 }
 
@@ -83,6 +85,7 @@ func (db *DB) Login(jwt_secret_key, email, password string) (UserLoginResponse, 
 	return UserLoginResponse{
 		Id:           user.Id,
 		Email:        user.Email,
+		IsChirpyRed:  user.IsChirpyRed,
 		Token:        token,
 		RefreshToken: refresh_token,
 	}, nil
@@ -126,7 +129,50 @@ Loop_Update_User:
 		return UpdateUserResponse{}, err2
 	}
 	return UpdateUserResponse{
-		Email: user.Email,
-		Id:    user.Id,
+		Email:       user.Email,
+		Id:          user.Id,
+		IsChirpyRed: user.IsChirpyRed,
+	}, nil
+}
+
+func (db *DB) WebhookUpgradeUser(id int) (UpdateUserResponse, error) {
+	dbData, err := db.readFromFile()
+	if err != nil {
+		return UpdateUserResponse{}, err
+	}
+
+	user := User{}
+
+	isUserExist := false
+Loop_Upgrade_User:
+	for _, v := range dbData.Users {
+		if v.Id == id {
+			user = v
+			isUserExist = !isUserExist
+			break Loop_Upgrade_User
+		}
+	}
+
+	if !isUserExist {
+		return UpdateUserResponse{}, errors.New("user does not exist")
+	}
+
+	user.IsChirpyRed = true
+	dbData.Users[id] = user
+
+	marshData, err := json.Marshal(dbData)
+	if err != nil {
+		return UpdateUserResponse{}, err
+	}
+
+	err2 := db.writeToFile(marshData)
+	if err2 != nil {
+		log.Println("Error while writing to data")
+		return UpdateUserResponse{}, err2
+	}
+	return UpdateUserResponse{
+		Email:       user.Email,
+		Id:          user.Id,
+		IsChirpyRed: user.IsChirpyRed,
 	}, nil
 }

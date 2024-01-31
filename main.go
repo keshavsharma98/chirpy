@@ -58,6 +58,7 @@ func main() {
 	apiRouter.Post("/revoke", apiCfg.handlerRevokeToken)
 	apiRouter.Post("/refresh", apiCfg.handlerRefreshToken)
 	apiRouter.Delete("/chirps/{id}", apiCfg.handlerDeleteChirpByID)
+	apiRouter.Post("/polka/webhooks", apiCfg.handlerWebhookUpgradeUser)
 	// Mount the apiRouter under /api path in the main router
 	r.Mount("/api", apiRouter)
 
